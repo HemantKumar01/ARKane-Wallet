@@ -1,0 +1,29 @@
+[package]
+name = "ark-grpc"
+version = "0.5.9"
+edition = "2021"
+license = "MIT"
+description = "gRPC client for Ark server communication"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(genproto)'] }
+
+[dependencies]
+ark-core = { path = "../ark-core", version = "0.5.9" }
+async-stream = { version = "0.3", default-features = false }
+base64 = { version = "0.22", default-features = false }
+bitcoin = { version = "0.32", default-features = false }
+futures = { version = "0.3", default-features = false }
+log = "0.4"
+prost = { version = "0.13", default-features = false }
+prost-types = { version = "0.13", default-features = false }
+tonic = { version = "0.12", default-features = false, features = ["tls-native-roots", "transport", "codegen", "prost"] }
+zkp = { package = "ark-secp256k1-zkp", version = "0.10.0", path = "../ark-rust-secp256k1-zkp", features = ["serde"] }
+
+[target.'cfg(genproto)'.build-dependencies]
+tonic-build = { version = "0.12" }
+
+[dev-dependencies]
+console_log = "1"
+tokio = { version = "1.41", features = ["macros", "rt"] }
+wasm-bindgen-test = "0.3"

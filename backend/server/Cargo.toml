@@ -1,0 +1,12 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ark-bdk-wallet = { path = "../ark-bdk-wallet" }
+ark-client = { path = "../ark-client" }
+ark-core = { path = "../ark-core" }
+ark-grpc = { path = "../ark-grpc" }
+zkp = { package = "ark-secp256k1-zkp", version = "0.10.0", path = "../ark-rust-secp256k1-zkp", features = ["serde", "rand-std"] }
+bitcoin = "0.32.5"

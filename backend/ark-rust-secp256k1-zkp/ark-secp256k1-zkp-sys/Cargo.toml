@@ -1,0 +1,33 @@
+[package]
+name = "ark-secp256k1-zkp-sys"
+version = "0.9.1"
+authors = [ "Dawid Ciężarkiewicz <dpc@ucore.info>",
+            "Andrew Poelstra <apoelstra@wpsoftware.net>",
+            "Steven Roose <steven@stevenroose.org>",
+            "Lucas Soriano <lucas@comit.network>",
+            "Thomas Eizinger <thomas@comit.network>" ]
+license = "CC0-1.0"
+homepage = "https://github.com/ElementsProject/rust-secp256k1-zkp/"
+repository = "https://github.com/ElementsProject/rust-secp256k1-zkp/"
+description = "FFI for `libsecp256k1-zkp` library."
+keywords = [ "secp256k1", "libsecp256k1-zkp", "ffi" ]
+readme = "README.md"
+build = "build.rs"
+links = "rustsecp256k1zkp_v0_8_0"
+edition = "2015"
+
+# Should make docs.rs show all functions, even those behind non-default features
+[package.metadata.docs.rs]
+features = [ "recovery", "lowmemory" ]
+
+[build-dependencies]
+cc = "1.0.28"
+
+[dependencies]
+secp256k1-sys = "0.9.0"
+
+[features]
+default = ["std"]
+recovery = ["secp256k1-sys/recovery"]
+lowmemory = ["secp256k1-sys/lowmemory"]
+std = []

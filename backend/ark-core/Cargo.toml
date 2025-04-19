@@ -1,0 +1,16 @@
+[package]
+name = "ark-core"
+version = "0.5.9"
+edition = "2021"
+license = "MIT"
+description = "Core types and utilities for Ark"
+
+[dependencies]
+bech32 = "0.11"
+bitcoin = { version = "0.32.4", features = ["base64", "rand"] }
+rand = "0.8"
+tracing = "0.1.37"
+zkp = { package = "ark-secp256k1-zkp", version = "0.10.0", path = "../ark-rust-secp256k1-zkp", features = ["serde", "rand-std"] }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+getrandom = { version = "0.2", features = ["wasm-bindgen", "js"] }
