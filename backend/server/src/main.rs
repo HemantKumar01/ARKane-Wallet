@@ -18,10 +18,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 use std::str::FromStr;
 use std::sync::Mutex;
 use uuid::Uuid;
-
 #[derive(Clone)]
 struct ArkAddressCli(ArkAddress);
 
@@ -540,7 +540,103 @@ async fn send_to_ark_address(
         txid,
     })
 }
+#[derive(Deserialize)]
+struct FaucetRequest {
+    onchain_address: String,
+    amount: f64, // Using f64 as nigiri faucet might accept decimal amounts
+}
 
+// Define response struct for the faucet endpoint
+#[derive(Serialize)]
+struct FaucetResponse {
+    success: bool,
+    address: String,
+    amount: f64,
+    txid: Option<String>,
+    error: Option<String>,
+    output: String,
+}
+
+// Add this new route to your existing imports and function declarations
+#[post("/faucet")]
+async fn faucet(req: web::Json<FaucetRequest>) -> impl Responder {
+    // Validate input parameters
+    if req.onchain_address.is_empty() {
+        return HttpResponse::BadRequest().json(FaucetResponse {
+            success: false,
+            address: req.onchain_address.clone(),
+            amount: req.amount,
+            txid: None,
+            error: Some("Empty onchain address provided".to_string()),
+            output: String::new(),
+        });
+    }
+
+    if req.amount <= 0.0 {
+        return HttpResponse::BadRequest().json(FaucetResponse {
+            success: false,
+            address: req.onchain_address.clone(),
+            amount: req.amount,
+            txid: None,
+            error: Some("Amount must be greater than zero".to_string()),
+            output: String::new(),
+        });
+    }
+
+    // Execute nigiri faucet command
+    let output = Command::new("nigiri")
+        .arg("faucet")
+        .arg(&req.onchain_address)
+        .arg(req.amount.to_string())
+        .output();
+
+    match output {
+        Ok(output) => {
+            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+            // Check if the command was successful
+            if output.status.success() {
+                // Try to extract txid from the output
+                let txid = extract_txid_from_output(&stdout);
+
+                HttpResponse::Ok().json(FaucetResponse {
+                    success: true,
+                    address: req.onchain_address.clone(),
+                    amount: req.amount,
+                    txid,
+                    error: None,
+                    output: stdout,
+                })
+            } else {
+                HttpResponse::InternalServerError().json(FaucetResponse {
+                    success: false,
+                    address: req.onchain_address.clone(),
+                    amount: req.amount,
+                    txid: None,
+                    error: Some(format!("Command failed: {}", stderr)),
+                    output: stdout,
+                })
+            }
+        }
+        Err(e) => HttpResponse::InternalServerError().json(FaucetResponse {
+            success: false,
+            address: req.onchain_address.clone(),
+            amount: req.amount,
+            txid: None,
+            error: Some(format!("Failed to execute command: {}", e)),
+            output: String::new(),
+        }),
+    }
+}
+
+// Helper function to try extracting a txid from command output
+fn extract_txid_from_output(output: &str) -> Option<String> {
+    // This regex will try to match common Bitcoin transaction ID patterns
+    // Adjust as needed based on the actual format of nigiri's output
+    let re = regex::Regex::new(r"[0-9a-f]{64}").ok()?;
+    re.find(output).map(|m| m.as_str().to_string())
+}
 async fn initialize_server(config: Config) -> Result<ark_core::server::Info> {
     // Connect to Ark server
     let mut grpc_client = ark_grpc::Client::new(config.ark_server_url.clone());
@@ -623,6 +719,7 @@ fn main() -> std::io::Result<()> {
                     .service(get_address)
                     .service(get_balance)
                     .service(send_to_ark_address)
+                    .service(faucet)
             })
             .bind("127.0.0.1:8080")?
             .run()
