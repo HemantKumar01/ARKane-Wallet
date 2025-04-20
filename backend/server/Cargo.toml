@@ -3,10 +3,29 @@ name = "backend"
 version = "0.1.0"
 edition = "2024"
 
+
 [dependencies]
-ark-bdk-wallet = { path = "../ark-bdk-wallet" }
-ark-client = { path = "../ark-client" }
+actix-web = "4"
+anyhow = "1"
 ark-core = { path = "../ark-core" }
 ark-grpc = { path = "../ark-grpc" }
-zkp = { package = "ark-secp256k1-zkp", version = "0.10.0", path = "../ark-rust-secp256k1-zkp", features = ["serde", "rand-std"] }
-bitcoin = "0.32.5"
+bitcoin = { version = "0.32" }
+clap = { version = "4", features = ["derive"] }
+esplora-client = { version = "0.10", features = ["async-https"] }
+futures = "0.3"
+jiff = "0.2.1"
+rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_derive = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+toml = "0.7"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+  "fmt",
+  "ansi",
+  "env-filter",
+  "time",
+  "tracing-log",
+  "json",
+] }
+uuid = { version = "1.4", features = ["v4", "serde"] }
