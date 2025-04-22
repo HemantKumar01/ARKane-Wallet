@@ -424,6 +424,12 @@ async fn send_to_ark_address(
         None => return HttpResponse::InternalServerError().body("Server not connected"),
     };
 
+    // Get Esplora client
+    let esplora_client = match data.esplora_client.as_ref() {
+        Some(client) => client.lock().unwrap().clone(),
+        None => return HttpResponse::InternalServerError().body("Esplora client not available"),
+    };
+
     // Parse the seed to get the secret key
     let sk = match SecretKey::from_str(&wallet_info.seed) {
         Ok(sk) => sk,
@@ -469,11 +475,31 @@ async fn send_to_ark_address(
         Err(_) => return HttpResponse::InternalServerError().body("Failed to list VTXOs"),
     };
 
-    // Create a simplified find_outpoints function that just returns empty results
-    // In a real implementation, this would need to be properly asynchronous
+    // Step 1: Prefetch outpoints we'll need
+    // Get the address for which we need outpoints
+    let vtxo_address = vtxo.address();
+
+    // Fetch outpoints for VTXO
+    let vtxo_explorer_outpoints = match esplora_client.find_outpoints(&vtxo_address).await {
+        Ok(outpoints) => outpoints,
+        Err(e) => {
+            return HttpResponse::InternalServerError()
+                .body(format!("Failed to fetch VTXO outpoints: {}", e));
+        }
+    };
+
+    // Create a cache of outpoints
+    let mut outpoint_cache = HashMap::new();
+    outpoint_cache.insert(vtxo_address.to_string(), vtxo_explorer_outpoints);
+
+    // Create a closure that uses the prefetched outpoints
     let find_outpoints =
-        |_address: &bitcoin::Address| -> Result<Vec<ExplorerUtxo>, ark_core::Error> {
-            Ok(Vec::new())
+        move |address: &bitcoin::Address| -> Result<Vec<ExplorerUtxo>, ark_core::Error> {
+            let address_str = address.to_string();
+            match outpoint_cache.get(&address_str) {
+                Some(outpoints) => Ok(outpoints.clone()),
+                None => Ok(Vec::new()), // Fallback for any addresses we didn't prefetch
+            }
         };
 
     // Create a HashMap with the spendable VTXOs
@@ -572,6 +598,7 @@ async fn send_to_ark_address(
         txid,
     })
 }
+
 #[derive(Deserialize)]
 struct FaucetRequest {
     onchain_address: String,
