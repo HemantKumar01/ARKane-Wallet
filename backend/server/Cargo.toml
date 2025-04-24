@@ -31,3 +31,4 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 uuid = { version = "1.4", features = ["v4", "serde"] }
 regex = "1.10.2"
 hex = "0.4.3"
+actix-cors = "0.7.1"

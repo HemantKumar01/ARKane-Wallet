@@ -1,13 +1,14 @@
+use actix_cors::Cors;
 use actix_web::{App, HttpServer, web};
 use anyhow::Result;
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use std::collections::HashMap;
 use std::sync::Mutex;
 
+use crate::transactions::{faucet, send_to_ark_address, settle_funds};
 use crate::types::{AppState, Config, EsploraClient};
 use crate::wallet::{create_wallet, get_address, get_balance};
-use crate::transactions::{send_to_ark_address, faucet, settle_funds};
 
 pub async fn initialize_server(config: Config) -> Result<ark_core::server::Info> {
     let mut grpc_client = ark_grpc::Client::new(config.ark_server_url.clone());
@@ -67,7 +68,9 @@ pub async fn start_server(config: Config) -> std::io::Result<()> {
 
     // Start HTTP server
     HttpServer::new(move || {
+        let cors = Cors::permissive();
         App::new()
+            .wrap(cors)
             .app_data(app_data.clone())
             .service(create_wallet)
             .service(get_address)
@@ -79,4 +82,4 @@ pub async fn start_server(config: Config) -> std::io::Result<()> {
     .bind("127.0.0.1:8080")?
     .run()
     .await
-} 
+}
