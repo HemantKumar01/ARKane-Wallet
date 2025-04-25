@@ -11,7 +11,7 @@ Reference taken from [ark-rs sample project](https://github.com/ArkLabsHQ/ark-rs
 - Rust and Cargo
 - Node.js and npm
 - [Nigiri](https://github.com/vulpemventures/nigiri) to quickly fire up a Bitcoin regtest environment and faucet funds.
-- [Ark Server](https://arkdev.info/docs/quick-start/server) Up and running.
+- [Ark Server](https://arkdev.info/docs/quick-start/server) up running and funded.
 
 ### Backend Setup
 
