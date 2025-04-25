@@ -1,4 +1,4 @@
-# ARKane Wallet Implementation
+# ARKane Wallet : Ark based wallet
 ARKane is a wallet implementation that allows you to create and manage Ark wallets, generate onchain and offchain addresses, and send funds to Ark addresses. It also includes a faucet functionality for requesting testnet bitcoin from the Nigiri Bitcoin testing environment.
 This implementation is using `ark-core` crate to connect to ark network using grpc.
 Reference taken from [ark-rs sample project](https://github.com/ArkLabsHQ/ark-rs/tree/master/ark-sample).
